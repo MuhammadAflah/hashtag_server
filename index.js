@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
 
 
 // MONGOOSE SETUP
-const PORT = process.env.PORT || 5001;
+const PORT = 3000 || 5001;
 mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.MONGO_URL, {
