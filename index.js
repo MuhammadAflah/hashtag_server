@@ -38,6 +38,12 @@ app.use(function (req, res, next) {
     );
     next();
   });
+
+app.use(helmet({
+    referrerPolicy:{
+        policy:"same-origin"
+    }
+}))
 app.use(express.json());
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
