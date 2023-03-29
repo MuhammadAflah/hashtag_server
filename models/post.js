@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const postSchema = new mongoose.Schema({
     content: {
         type: String,
-        require:false
+        require: false
     },
     author: {
         type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +19,7 @@ const postSchema = new mongoose.Schema({
         of: Boolean,
     },
     comments: [{
-      coment: {
+        coment: {
             type: String,
         },
         author: {
@@ -30,21 +30,21 @@ const postSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         },
-        isDelete:{
-          type: Boolean,
-          default: false
+        isDelete: {
+            type: Boolean,
+            default: false
         }
     }],
     createdAt: {
         type: Date,
         default: Date.now
     },
-    isDelete:{
-          type: Boolean,
-          default: false
+    isDelete: {
+        type: Boolean,
+        default: false
     }
 });
 
 const Post = mongoose.model('Post', postSchema);
 
-export default Post;
+export default Post;

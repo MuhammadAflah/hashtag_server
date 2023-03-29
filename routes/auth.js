@@ -5,10 +5,12 @@ import {
   verifyEmail,
   resetPassword,
   googleLogin,
+  register,
 } from "../controllers/auth.js";
 
 const router = express.Router();
 
+router.post("/register", register)
 router.post("/login", login);
 router.post("/verify-email/:id", verifyEmail);
 router.post("/forgot-password", forgotpassword);

@@ -2,18 +2,14 @@ import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
   {
-    firstName: {
+    username: {
       type: String,
       required: true,
       min: 2,
-      max: 50,
+      max: 40,
+      unique: true,
     },
-    lastName: {
-      type: String,
-      required: true,
-      min: 2,
-      max: 50,
-    },
+    name: String,
     email: {
       type: String,
       required: true,
@@ -35,13 +31,7 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
-    location: String,
-    occupation: String,
-    viewProfile: Number,
-    impressions: Number,
-    verifytoken: {
-      type: String,
-    },
+    bio: String,
   },
   { timestamps: true }
 );

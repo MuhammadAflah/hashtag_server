@@ -15,11 +15,9 @@ export const createMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
-        console.log(req.params.converstationId);
         const messages = await Message.find({
             converstationId: req.params.converstationId,
         });
-        console.log(messages,'------------');
         res.status(200).json(messages);
     } catch (error) {
         res.status(500).json(error);

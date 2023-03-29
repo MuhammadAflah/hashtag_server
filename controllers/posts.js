@@ -22,9 +22,7 @@ export const createPost = async (req, res) => {
       });
       post.image = result.secure_url;
     }
-
     const newPost = new Post(post);
-
     const savedPost = await newPost.save();
     const populatedPost = await fetchFindByIdData(savedPost._id, {
       isDelete: false,
@@ -78,6 +76,14 @@ export const likePost = async (req, res) => {
       post.likes.delete(userId);
     } else {
       post.likes.set(userId, true);
+      const notification = new Notification({
+        type: "like",
+        user: post.author,
+        friend: userId,
+        postId: post._id,
+        content: "Liked your post",
+      });
+      await notification.save();
     }
 
     const updatedPost = await Post.findByIdAndUpdate(
@@ -103,6 +109,16 @@ export const postComment = async (req, res) => {
     const { comment, userId } = req.body;
     const post = await Post.findById(id);
     post.comments.unshift({ coment: comment, author: userId });
+
+    const notification = new Notification({
+      type: "Comment",
+      user: post.author,
+      friend: userId,
+      postId: post._id,
+      content: "commented on your post",
+    });
+    await notification.save();
+
     const savedPost = await post.save();
     const populatedPost = await fetchFindByIdData(savedPost._id, {
       isDelete: false,

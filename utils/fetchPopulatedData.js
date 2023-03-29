@@ -1,9 +1,9 @@
-import Post from "../models/post.js";
+import Post from "../models/Post.js";
 
 export const fetchFindByIdData =async (id,data)=>{
     const populatedPost=await Post.findById(id,data)
-      .populate("author", "firstName lastName picturePath")
-      .populate("comments.author", "firstName lastName picturePath")
+      .populate("author", "username picturePath")
+      .populate("comments.author", "username picturePath")
       .sort({ createdAt: -1 })
       .exec();
 
@@ -11,8 +11,8 @@ export const fetchFindByIdData =async (id,data)=>{
 }
 export const fetchFindData =async (data)=>{
     const populatedPost = await Post.find(data)
-      .populate("author", "firstName lastName picturePath")
-      .populate("comments.author", "firstName lastName picturePath")
+      .populate("author", "username picturePath")
+      .populate("comments.author", "username picturePath")
       .exec();
 
       return populatedPost

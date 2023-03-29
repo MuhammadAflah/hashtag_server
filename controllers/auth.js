@@ -19,38 +19,25 @@ export const register = async (req, res) => {
       folder: "ProfileImage",
     });
     const {
-      firstName,
-      lastName,
+      username,
       email,
       password,
       followings,
       followers,
-      location,
-      occupation,
     } = req.body;
 
     // Add input validation rules
     await Promise.all([
-      body("firstName")
-        .matches(/^[a-zA-Z\s]+$/)
-        .withMessage("First name must contain only letters")
-        .run(req),
-      body("lastName")
-        .matches(/^[a-zA-Z\s]+$/)
-        .withMessage("Last name must contain only letters")
+      body("username")
+        .matches(/^[a-z0-9_.]+$/)
+        .withMessage(
+          "Username must contain only lowercase letters, underscores, dots, and numbers"
+        )
         .run(req),
       body("email").isEmail().withMessage("Invalid email address").run(req),
       body("password")
         .isLength({ min: 8 })
         .withMessage("Password must be at least 8 characters long")
-        .run(req),
-      body("location")
-        .matches(/^[a-zA-Z\s]+$/)
-        .withMessage("location must contain only letters")
-        .run(req),
-      body("occupation")
-        .matches(/^[a-zA-Z\s]+$/)
-        .withMessage("occupation must contain only letters")
         .run(req),
     ]);
 
@@ -58,6 +45,11 @@ export const register = async (req, res) => {
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map((error) => error.msg);
       return res.status(400).json({ error: errorMessages });
+    }
+
+    const sameUsername = await User.findOne({username})
+    if (sameUsername) {
+      return res.status(409).json({ error: ["User Name Already Exists!"] });
     }
 
     const existingUser = await User.findOne({ email });
@@ -69,17 +61,14 @@ export const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      firstName,
-      lastName,
+      username,
+      name:'',
       email,
       password: passwordHash,
       picturePath: result.secure_url,
       followings,
       followers,
-      location,
-      occupation,
-      viewProfile: Math.ceil(Math.random() * 1000),
-      impressions: Math.floor(Math.random() * 1000),
+      bio:'',
     });
 
     // Save user to database
@@ -94,6 +83,7 @@ export const register = async (req, res) => {
       token: OTP,
     });
     await verificationToken.save();
+
     //set up nodemailer
     const transport = nodemailer.createTransport({
       host: "smtp.mailtrap.io",
@@ -111,7 +101,6 @@ export const register = async (req, res) => {
     });
 
     // Return success message with token and user data
-    // res.status(201).json({ token, user: savedUser });
     return res.status(200).json({
       status: "Pending",
       message: "Please check your email",
@@ -180,8 +169,10 @@ export const verifyEmail = async (req, res) => {
 // LOGGING IN
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email: email });
+    const { emailOrUsername, password } = req.body;
+    const user = await User.findOne({
+      $or: [{ email: emailOrUsername }, { username: emailOrUsername }]
+    });
     if (!user) return res.status(400).json({ msg: "User does not exist. " });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -201,7 +192,6 @@ export const updateProPic = async (req, res) => {
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "ProfileImage",
     });
-    console.log(result, "lll");
     const picturePath = result.secure_url;
     const { id } = req.user;
     const updatedUser = await User.findByIdAndUpdate(
@@ -209,7 +199,6 @@ export const updateProPic = async (req, res) => {
       { picturePath },
       { new: true }
     );
-    console.log(updatedUser, "updatedUser");
     res.status(201).json(updatedUser);
   } catch (err) {
     res.status(500).json({ error: "Error Occured" });
@@ -220,7 +209,6 @@ export const updateProPic = async (req, res) => {
 export const forgotpassword = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log(email);
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -282,13 +270,15 @@ export const resetPassword = async (req, res) => {
 
     await Promise.all([
       body("password")
-      .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long")
-      .matches(/[A-Z]/)
-      .withMessage("Password must contain at least one uppercase letter")
-      .matches(/[!@#$%^&*(),.?":{}|<>]/)
-      .withMessage("Password must contain at least one symbol (!@#$%^&*(),.?\":{}|<>)")
-      .run(req)
+        .isLength({ min: 8 })
+        .withMessage("Password must be at least 8 characters long")
+        .matches(/[A-Z]/)
+        .withMessage("Password must contain at least one uppercase letter")
+        .matches(/[!@#$%^&*(),.?":{}|<>]/)
+        .withMessage(
+          'Password must contain at least one symbol (!@#$%^&*(),.?":{}|<>)'
+        )
+        .run(req),
     ]);
 
     const errors = validationResult(req);
@@ -322,16 +312,16 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-// GOOGLE SIGNUP 
+// GOOGLE SIGNUP
 
 const CLIENT_ID = process.env.CLIENT_ID;
-async function verify(client_id, jwtToken) {
+const  verify = async(client_id, jwtToken)=> {
   const client = new OAuth2Client(client_id);
   // Call the verifyIdToken to
   // varify and decode it
   const ticket = await client.verifyIdToken({
-    idToken: jwtToken,
-    audience: client_id,
+      idToken: jwtToken,
+      audience: client_id,
   });
   // Get the JSON with all the user info
   const payload = ticket.getPayload();
@@ -343,12 +333,8 @@ async function verify(client_id, jwtToken) {
 export const googleLogin = async (req, res) => {
   try {
     const { token } = req.body;
-    const data =await verify(
-      CLIENT_ID,
-      token
-    );
-    console.log(data);
-    const { given_name, family_name, email, picture } = await verify(
+    const data = await verify(CLIENT_ID, token);
+    const { name, email, picture } = await verify(
       CLIENT_ID,
       token
     );
@@ -358,8 +344,7 @@ export const googleLogin = async (req, res) => {
       res.status(200).json({ token, user });
     } else {
       const newUser = new User({
-        firstName: given_name,
-        lastName: family_name,
+        username: name,
         email: email,
         picturePath: picture,
       });

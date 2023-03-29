@@ -31,6 +31,13 @@ const io = new Server(httpServer, {
         origin: 'https://master.d1nv9eb5rafclu.amplifyapp.com'
     }
 });
+app.use(function (req, res, next) {
+    res.header(
+      "Access-Control-Allow-Origin",
+      "https://main.dznkokvbmgz2z.amplifyapp.com"
+    );
+    next();
+  });
 app.use(express.json());
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
