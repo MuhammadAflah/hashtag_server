@@ -28,7 +28,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: 'https://master.d1nv9eb5rafclu.amplifyapp.com'
+        origin: 'https://master.d3k9e3icbl75ya.amplifyapp.com'
     }
 });
 app.use(function (req, res, next) {
